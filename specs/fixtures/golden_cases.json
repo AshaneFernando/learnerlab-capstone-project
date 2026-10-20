@@ -1,0 +1,277 @@
+{
+  "_meta": {
+    "synthetic": true,
+    "description": "SYNTHETIC development and test data. Golden expected results for LearnLab's deterministic domain rules. Agents generate parametrised tests from these cases; a case's expected value is the spec's answer, never the code's.",
+    "source_specs": [
+      "specs/app_spec.md",
+      "specs/course-authoring_spec.md",
+      "specs/catalog_spec.md",
+      "specs/enrollment_spec.md",
+      "specs/progress-tracker_spec.md",
+      "specs/quiz-engine_spec.md",
+      "specs/instructor-workbench_spec.md"
+    ],
+    "version": 1,
+    "conventions": {
+      "actors": "LEARNER, LEARNER_ENROLLED, LEARNER_NOT_ENROLLED, LEARNER_OTHER, INSTRUCTOR_OWNER, INSTRUCTOR_OTHER, ADMIN, VISITOR (no token)",
+      "expected_error": "{\"error_code\": <code from app_spec §8.1>, \"http_status\": <int>}",
+      "role_boundaries_expected": "map of actor -> HTTP status for the request in input"
+    }
+  },
+
+  "quiz_grading": [
+    { "id": "GC-QG-01", "proves": ["AC-05.4", "GR-4", "DR-17"], "description": "0 of 4 correct", "input": { "correct": 0, "total": 4 }, "expected": { "score_percent": 0 } },
+    { "id": "GC-QG-02", "proves": ["AC-05.4", "GR-4", "DR-17"], "description": "1 of 3 correct rounds down", "input": { "correct": 1, "total": 3 }, "expected": { "score_percent": 33 } },
+    { "id": "GC-QG-03", "proves": ["AC-05.4", "GR-4", "DR-17"], "description": "2 of 3 correct rounds down (not 67)", "input": { "correct": 2, "total": 3 }, "expected": { "score_percent": 66 } },
+    { "id": "GC-QG-04", "proves": ["AC-05.4", "GR-4", "DR-17"], "description": "3 of 4 correct", "input": { "correct": 3, "total": 4 }, "expected": { "score_percent": 75 } },
+    { "id": "GC-QG-05", "proves": ["AC-05.4", "GR-4", "DR-17"], "description": "5 of 7 correct rounds down", "input": { "correct": 5, "total": 7 }, "expected": { "score_percent": 71 } },
+    { "id": "GC-QG-06", "proves": ["AC-05.4", "GR-4", "DR-17"], "description": "4 of 4 correct", "input": { "correct": 4, "total": 4 }, "expected": { "score_percent": 100 } },
+    {
+      "id": "GC-QG-07", "proves": ["AC-05.5", "GR-3", "DR-17"],
+      "description": "Two of four answered, both correct; unanswered count as incorrect",
+      "input": {
+        "questions": [
+          { "id": 1, "correct_option_id": 11 }, { "id": 2, "correct_option_id": 21 },
+          { "id": 3, "correct_option_id": 31 }, { "id": 4, "correct_option_id": 41 }
+        ],
+        "answers": { "1": 11, "2": 21 }
+      },
+      "expected": { "score_percent": 50, "results": [ { "question_id": 1, "correct": true }, { "question_id": 2, "correct": true }, { "question_id": 3, "correct": false }, { "question_id": 4, "correct": false } ] }
+    },
+    {
+      "id": "GC-QG-08", "proves": ["AC-05.7", "GR-5"],
+      "description": "Option id that belongs to a different question is rejected and no attempt is stored",
+      "input": {
+        "questions": [ { "id": 1, "option_ids": [11, 12], "correct_option_id": 11 }, { "id": 2, "option_ids": [21, 22], "correct_option_id": 21 } ],
+        "answers": { "1": 21 }
+      },
+      "expected": { "error_code": "VALIDATION_ERROR", "http_status": 422, "attempt_stored": false }
+    },
+    {
+      "id": "GC-QG-09", "proves": ["AC-05.7", "GR-5"],
+      "description": "Answer for a question that is not in the quiz is rejected",
+      "input": { "questions": [ { "id": 1, "option_ids": [11, 12], "correct_option_id": 11 } ], "answers": { "1": 11, "99": 991 } },
+      "expected": { "error_code": "VALIDATION_ERROR", "http_status": 422, "attempt_stored": false }
+    },
+    {
+      "id": "GC-QG-10", "proves": ["AC-05.6", "GR-6", "DR-18"],
+      "description": "Same answers graded 100 times give identical results",
+      "input": {
+        "repeat": 100,
+        "questions": [ { "id": 1, "correct_option_id": 11 }, { "id": 2, "correct_option_id": 22 }, { "id": 3, "correct_option_id": 31 } ],
+        "answers": { "1": 11, "2": 21, "3": 31 }
+      },
+      "expected": { "all_identical": true, "score_percent": 66 }
+    },
+    {
+      "id": "GC-QG-11", "proves": ["AC-05.2", "QZ-3", "DR-16"],
+      "description": "MCQ with no correct option",
+      "input": { "type": "MCQ", "text": "Pick one", "options": [ { "text": "A", "is_correct": false }, { "text": "B", "is_correct": false } ] },
+      "expected": { "error_code": "VALIDATION_ERROR", "http_status": 422 }
+    },
+    {
+      "id": "GC-QG-12", "proves": ["AC-05.2", "QZ-3", "DR-16"],
+      "description": "MCQ with two correct options",
+      "input": { "type": "MCQ", "text": "Pick one", "options": [ { "text": "A", "is_correct": true }, { "text": "B", "is_correct": true }, { "text": "C", "is_correct": false } ] },
+      "expected": { "error_code": "VALIDATION_ERROR", "http_status": 422 }
+    },
+    {
+      "id": "GC-QG-13", "proves": ["AC-05.2", "QZ-3"],
+      "description": "MCQ with only one option",
+      "input": { "type": "MCQ", "text": "Pick one", "options": [ { "text": "A", "is_correct": true } ] },
+      "expected": { "error_code": "VALIDATION_ERROR", "http_status": 422 }
+    },
+    {
+      "id": "GC-QG-14", "proves": ["AC-05.2", "QZ-3"],
+      "description": "MCQ with seven options",
+      "input": { "type": "MCQ", "text": "Pick one", "options": [
+        { "text": "A", "is_correct": true }, { "text": "B", "is_correct": false }, { "text": "C", "is_correct": false },
+        { "text": "D", "is_correct": false }, { "text": "E", "is_correct": false }, { "text": "F", "is_correct": false },
+        { "text": "G", "is_correct": false } ] },
+      "expected": { "error_code": "VALIDATION_ERROR", "http_status": 422 }
+    },
+    {
+      "id": "GC-QG-15", "proves": ["AC-05.2", "QZ-3"],
+      "description": "MCQ with six options and exactly one correct is valid (upper boundary)",
+      "input": { "type": "MCQ", "text": "Pick one", "options": [
+        { "text": "A", "is_correct": false }, { "text": "B", "is_correct": false }, { "text": "C", "is_correct": true },
+        { "text": "D", "is_correct": false }, { "text": "E", "is_correct": false }, { "text": "F", "is_correct": false } ] },
+      "expected": { "valid": true, "option_count": 6 }
+    },
+    {
+      "id": "GC-QG-16", "proves": ["AC-05.1", "QZ-4", "DR-16"],
+      "description": "TRUE_FALSE with correct_answer true expands to two stored options",
+      "input": { "type": "TRUE_FALSE", "text": "Python is case-sensitive.", "correct_answer": true },
+      "expected": { "options": [ { "text": "True", "is_correct": true, "position": 1 }, { "text": "False", "is_correct": false, "position": 2 } ] }
+    },
+    {
+      "id": "GC-QG-17", "proves": ["AC-05.1", "QZ-4"],
+      "description": "TRUE_FALSE with correct_answer false",
+      "input": { "type": "TRUE_FALSE", "text": "A string can be changed in place.", "correct_answer": false },
+      "expected": { "options": [ { "text": "True", "is_correct": false, "position": 1 }, { "text": "False", "is_correct": true, "position": 2 } ] }
+    },
+    {
+      "id": "GC-QG-18", "proves": ["AC-06.2", "AT-6", "DR-20"],
+      "description": "Best score is the maximum across attempts",
+      "input": { "attempt_scores": [40, 80, 60, 20] },
+      "expected": { "best_score_percent": 80 }
+    },
+    {
+      "id": "GC-QG-19", "proves": ["AT-6"],
+      "description": "Best score with no attempts",
+      "input": { "attempt_scores": [] },
+      "expected": { "best_score_percent": null }
+    },
+    {
+      "id": "GC-QG-20", "proves": ["AC-06.7", "AT-3", "DR-21"],
+      "description": "Quiz with no questions cannot be attempted",
+      "input": { "questions": [], "answers": {} },
+      "expected": { "error_code": "QUIZ_EMPTY", "http_status": 409 }
+    }
+  ],
+
+  "progress_percent": [
+    { "id": "GC-PP-01", "proves": ["AC-07.2", "PR-7", "DR-14"], "description": "Nothing completed", "input": { "completed": 0, "total": 7 }, "expected": { "progress_percent": 0 } },
+    { "id": "GC-PP-02", "proves": ["AC-07.2", "PR-7", "DR-14"], "description": "1 of 3 rounds down", "input": { "completed": 1, "total": 3 }, "expected": { "progress_percent": 33 } },
+    { "id": "GC-PP-03", "proves": ["AC-07.2", "PR-7", "DR-14"], "description": "2 of 3 rounds down (not 67)", "input": { "completed": 2, "total": 3 }, "expected": { "progress_percent": 66 } },
+    { "id": "GC-PP-04", "proves": ["AC-07.2", "PR-7", "DR-14", "FR-26"], "description": "3 of 7", "input": { "completed": 3, "total": 7 }, "expected": { "progress_percent": 42 } },
+    { "id": "GC-PP-05", "proves": ["AC-07.2", "PR-7", "DR-14"], "description": "All complete", "input": { "completed": 7, "total": 7 }, "expected": { "progress_percent": 100 } },
+    { "id": "GC-PP-06", "proves": ["AC-07.2", "PR-7", "DR-14"], "description": "Course with no lessons", "input": { "completed": 0, "total": 0 }, "expected": { "progress_percent": 0 } },
+    { "id": "GC-PP-07", "proves": ["AC-07.1", "PR-7"], "description": "First of four lessons", "input": { "completed": 1, "total": 4 }, "expected": { "progress_percent": 25 } }
+  ],
+
+  "progress_bands": [
+    { "id": "GC-PB-01", "proves": ["AC-07.10", "PR-9", "DR-15"], "description": "Lower edge of first band", "input": { "percent": 0 }, "expected": { "band": "0-24" } },
+    { "id": "GC-PB-02", "proves": ["AC-07.10", "PR-9", "DR-15"], "description": "Upper edge of first band", "input": { "percent": 24 }, "expected": { "band": "0-24" } },
+    { "id": "GC-PB-03", "proves": ["AC-07.10", "PR-9", "DR-15"], "description": "Exactly 25 belongs to second band", "input": { "percent": 25 }, "expected": { "band": "25-49" } },
+    { "id": "GC-PB-04", "proves": ["AC-07.10", "PR-9", "DR-15"], "description": "Upper edge of second band", "input": { "percent": 49 }, "expected": { "band": "25-49" } },
+    { "id": "GC-PB-05", "proves": ["AC-07.10", "PR-9", "DR-15"], "description": "Exactly 50 belongs to third band", "input": { "percent": 50 }, "expected": { "band": "50-74" } },
+    { "id": "GC-PB-06", "proves": ["AC-07.10", "PR-9", "DR-15"], "description": "Upper edge of third band", "input": { "percent": 74 }, "expected": { "band": "50-74" } },
+    { "id": "GC-PB-07", "proves": ["AC-07.10", "PR-9", "DR-15"], "description": "Exactly 75 belongs to top band", "input": { "percent": 75 }, "expected": { "band": "75-100" } },
+    { "id": "GC-PB-08", "proves": ["AC-07.10", "PR-9", "DR-15"], "description": "Complete", "input": { "percent": 100 }, "expected": { "band": "75-100" } },
+    {
+      "id": "GC-PB-09", "proves": ["AC-09.1", "WB-1", "WB-2"],
+      "description": "Band counts for five learners at 0, 25, 50, 75 and 100 percent",
+      "input": { "learner_percents": [0, 25, 50, 75, 100] },
+      "expected": { "enrolled": 5, "bands": { "0-24": 1, "25-49": 1, "50-74": 1, "75-100": 2 } }
+    },
+    {
+      "id": "GC-PB-10", "proves": ["AC-09.2", "WB-2"],
+      "description": "All four bands present even when empty",
+      "input": { "learner_percents": [0, 0, 0] },
+      "expected": { "enrolled": 3, "bands": { "0-24": 3, "25-49": 0, "50-74": 0, "75-100": 0 } }
+    },
+    {
+      "id": "GC-PB-11", "proves": ["AC-09.3", "WB-2"],
+      "description": "No enrolments",
+      "input": { "learner_percents": [] },
+      "expected": { "enrolled": 0, "bands": { "0-24": 0, "25-49": 0, "50-74": 0, "75-100": 0 } }
+    }
+  ],
+
+  "course_lifecycle": [
+    { "id": "GC-CL-01", "proves": ["AC-08.1", "CL-1", "DR-02"], "description": "DRAFT + publish", "input": { "from": "DRAFT", "action": "publish" }, "expected": { "to": "PUBLISHED" } },
+    { "id": "GC-CL-02", "proves": ["AC-08.2", "CL-1", "DR-03"], "description": "DRAFT + unpublish is forbidden", "input": { "from": "DRAFT", "action": "unpublish" }, "expected": { "error_code": "INVALID_COURSE_STATE", "http_status": 409, "exception": "InvalidCourseStateException" } },
+    { "id": "GC-CL-03", "proves": ["AC-08.2", "AC-08.3", "CL-1", "DR-03"], "description": "DRAFT + archive is forbidden", "input": { "from": "DRAFT", "action": "archive" }, "expected": { "error_code": "INVALID_COURSE_STATE", "http_status": 409, "exception": "InvalidCourseStateException" } },
+    { "id": "GC-CL-04", "proves": ["AC-08.2", "CL-1", "DR-03"], "description": "PUBLISHED + publish is forbidden", "input": { "from": "PUBLISHED", "action": "publish" }, "expected": { "error_code": "INVALID_COURSE_STATE", "http_status": 409, "exception": "InvalidCourseStateException" } },
+    { "id": "GC-CL-05", "proves": ["AC-08.1", "CL-1", "DR-02"], "description": "PUBLISHED + unpublish", "input": { "from": "PUBLISHED", "action": "unpublish" }, "expected": { "to": "UNPUBLISHED" } },
+    { "id": "GC-CL-06", "proves": ["AC-08.2", "CL-1", "DR-03"], "description": "PUBLISHED + archive is forbidden", "input": { "from": "PUBLISHED", "action": "archive" }, "expected": { "error_code": "INVALID_COURSE_STATE", "http_status": 409, "exception": "InvalidCourseStateException" } },
+    { "id": "GC-CL-07", "proves": ["AC-08.1", "CL-1", "DR-02", "A-1"], "description": "UNPUBLISHED + publish (republish)", "input": { "from": "UNPUBLISHED", "action": "publish" }, "expected": { "to": "PUBLISHED" } },
+    { "id": "GC-CL-08", "proves": ["AC-08.2", "CL-1", "DR-03"], "description": "UNPUBLISHED + unpublish is forbidden", "input": { "from": "UNPUBLISHED", "action": "unpublish" }, "expected": { "error_code": "INVALID_COURSE_STATE", "http_status": 409, "exception": "InvalidCourseStateException" } },
+    { "id": "GC-CL-09", "proves": ["AC-08.1", "CL-1", "DR-02"], "description": "UNPUBLISHED + archive", "input": { "from": "UNPUBLISHED", "action": "archive" }, "expected": { "to": "ARCHIVED" } },
+    { "id": "GC-CL-10", "proves": ["AC-08.2", "AC-08.4", "CL-1", "DR-03"], "description": "ARCHIVED + publish is forbidden", "input": { "from": "ARCHIVED", "action": "publish" }, "expected": { "error_code": "INVALID_COURSE_STATE", "http_status": 409, "exception": "InvalidCourseStateException" } },
+    { "id": "GC-CL-11", "proves": ["AC-08.2", "AC-08.4", "CL-1", "DR-03"], "description": "ARCHIVED + unpublish is forbidden", "input": { "from": "ARCHIVED", "action": "unpublish" }, "expected": { "error_code": "INVALID_COURSE_STATE", "http_status": 409, "exception": "InvalidCourseStateException" } },
+    { "id": "GC-CL-12", "proves": ["AC-08.2", "AC-08.4", "CL-1", "DR-03"], "description": "ARCHIVED + archive is forbidden", "input": { "from": "ARCHIVED", "action": "archive" }, "expected": { "error_code": "INVALID_COURSE_STATE", "http_status": 409, "exception": "InvalidCourseStateException" } },
+    { "id": "GC-CL-13", "proves": ["AC-04.2", "CL-3", "DR-06"], "description": "Publishing a DRAFT course with no lessons", "input": { "from": "DRAFT", "action": "publish", "modules": 1, "lessons": 0 }, "expected": { "error_code": "COURSE_NOT_READY", "http_status": 409, "state_after": "DRAFT" } },
+    { "id": "GC-CL-14", "proves": ["AC-08.6", "CL-6"], "description": "Two concurrent publish requests on a ready DRAFT course", "input": { "from": "DRAFT", "action": "publish", "concurrent_requests": 2 }, "expected": { "responses": { "200": 1, "409": 1 }, "error_code_for_loser": "INVALID_COURSE_STATE", "audit_records": 1 } }
+  ],
+
+  "enrollment": [
+    { "id": "GC-EN-01", "proves": ["AC-01.3", "EN-1", "DR-07"], "description": "First enrolment in a PUBLISHED course", "input": { "actor": "LEARNER", "course_state": "PUBLISHED", "already_enrolled": false }, "expected": { "http_status": 201, "progress_percent": 0, "enrollment_rows": 1 } },
+    { "id": "GC-EN-02", "proves": ["AC-01.5", "EN-2", "DR-08"], "description": "Second enrolment for the same pair", "input": { "actor": "LEARNER", "course_state": "PUBLISHED", "already_enrolled": true }, "expected": { "error_code": "ALREADY_ENROLLED", "http_status": 409, "enrollment_rows": 1 } },
+    { "id": "GC-EN-03", "proves": ["AC-01.4", "AC-04.5", "EN-1", "DR-07"], "description": "Course in DRAFT", "input": { "actor": "LEARNER", "course_state": "DRAFT", "already_enrolled": false }, "expected": { "error_code": "COURSE_NOT_PUBLISHED", "http_status": 409, "enrollment_rows": 0 } },
+    { "id": "GC-EN-04", "proves": ["AC-01.4", "AC-04.5", "EN-1", "DR-07"], "description": "Course UNPUBLISHED", "input": { "actor": "LEARNER", "course_state": "UNPUBLISHED", "already_enrolled": false }, "expected": { "error_code": "COURSE_NOT_PUBLISHED", "http_status": 409, "enrollment_rows": 0 } },
+    { "id": "GC-EN-05", "proves": ["AC-01.4", "AC-04.5", "EN-1", "DR-07"], "description": "Course ARCHIVED", "input": { "actor": "LEARNER", "course_state": "ARCHIVED", "already_enrolled": false }, "expected": { "error_code": "COURSE_NOT_PUBLISHED", "http_status": 409, "enrollment_rows": 0 } },
+    { "id": "GC-EN-06", "proves": ["AC-01.6", "EN-3", "DR-08", "FR-20"], "description": "Five concurrent enrolment requests for one learner and course", "input": { "actor": "LEARNER", "course_state": "PUBLISHED", "concurrent_requests": 5 }, "expected": { "responses": { "201": 1, "409": 4 }, "error_code_for_losers": "ALREADY_ENROLLED", "any_5xx": false, "enrollment_rows": 1 } },
+    { "id": "GC-EN-07", "proves": ["AC-01.8"], "description": "Instructor tries to enrol", "input": { "actor": "INSTRUCTOR_OTHER", "course_state": "PUBLISHED" }, "expected": { "error_code": "FORBIDDEN", "http_status": 403 } },
+    { "id": "GC-EN-08", "proves": ["AC-01.8"], "description": "Admin tries to enrol", "input": { "actor": "ADMIN", "course_state": "PUBLISHED" }, "expected": { "error_code": "FORBIDDEN", "http_status": 403 } },
+    { "id": "GC-EN-09", "proves": ["AC-01.7", "EN-5", "DR-10"], "description": "Enrolment survives unpublishing", "input": { "actor": "LEARNER", "enrolled_while": "PUBLISHED", "then": "unpublish" }, "expected": { "listed_in_my_enrollments": true, "course_state": "UNPUBLISHED" } },
+    { "id": "GC-EN-10", "proves": ["AC-01.1", "RG-1", "RG-3", "RG-5"], "description": "Register a learner; role field in request is ignored", "input": { "name": "Ada Lovelace", "email": "ada@example.test", "password": "Passw0rd!", "role": "ADMIN" }, "expected": { "http_status": 201, "role": "LEARNER", "body_has_password_fields": false } },
+    { "id": "GC-EN-11", "proves": ["AC-01.2", "RG-2"], "description": "Duplicate email differing only in case", "input": { "existing_email": "ada@example.test", "email": "ADA@example.test" }, "expected": { "error_code": "EMAIL_TAKEN", "http_status": 409 } },
+    { "id": "GC-EN-12", "proves": ["RG-1", "NFR-03.2"], "description": "Password without a digit; 422 must not echo values", "input": { "name": "Ada Lovelace", "email": "ada2@example.test", "password": "Password" }, "expected": { "error_code": "VALIDATION_ERROR", "http_status": 422, "fields": ["password"], "body_contains_submitted_values": false } }
+  ],
+
+  "role_boundaries": [
+    { "id": "GC-RB-01", "proves": ["AC-02.3", "CA-1"], "description": "course-authoring: create course", "input": { "method": "POST", "path": "/api/courses" }, "expected": { "LEARNER": 403, "INSTRUCTOR_OWNER": 201, "INSTRUCTOR_OTHER": 201, "ADMIN": 403, "VISITOR": 401 } },
+    { "id": "GC-RB-02", "proves": ["AC-02.4", "AC-03.3", "CA-3", "CA-8"], "description": "course-authoring: edit course details", "input": { "method": "PATCH", "path": "/api/courses/{course_id}", "course_state": "DRAFT" }, "expected": { "LEARNER": 403, "INSTRUCTOR_OWNER": 200, "INSTRUCTOR_OTHER": 403, "ADMIN": 403, "INSTRUCTOR_OWNER_when_PUBLISHED": 409 } },
+    { "id": "GC-RB-03", "proves": ["AC-03.1", "AC-03.5", "CA-3", "CA-8"], "description": "course-authoring: add module / lesson", "input": { "method": "POST", "path": "/api/courses/{course_id}/modules", "course_state": "DRAFT" }, "expected": { "LEARNER": 403, "INSTRUCTOR_OWNER": 201, "INSTRUCTOR_OTHER": 403, "ADMIN": 403, "INSTRUCTOR_OWNER_when_UNPUBLISHED": 201, "INSTRUCTOR_OWNER_when_PUBLISHED": 409 } },
+    { "id": "GC-RB-04", "proves": ["AC-03.3", "CA-3"], "description": "course-authoring: edit module / lesson", "input": { "method": "PATCH", "path": "/api/lessons/{lesson_id}", "course_state": "DRAFT" }, "expected": { "LEARNER": 403, "INSTRUCTOR_OWNER": 200, "INSTRUCTOR_OTHER": 403, "ADMIN": 403, "INSTRUCTOR_OWNER_when_ARCHIVED": 409 } },
+    { "id": "GC-RB-05", "proves": ["AC-03.6", "CA-7"], "description": "course-authoring: delete module / lesson", "input": { "method": "DELETE", "path": "/api/lessons/{lesson_id}", "course_state": "DRAFT" }, "expected": { "LEARNER": 403, "INSTRUCTOR_OWNER": 204, "INSTRUCTOR_OTHER": 403, "ADMIN": 403, "INSTRUCTOR_OWNER_when_UNPUBLISHED": 409, "error_code_when_not_DRAFT": "DELETE_NOT_ALLOWED" } },
+    { "id": "GC-RB-06", "proves": ["FR-06"], "description": "course-authoring: list own courses", "input": { "method": "GET", "path": "/api/instructor/courses" }, "expected": { "LEARNER": 403, "INSTRUCTOR_OWNER": 200, "ADMIN": 403 } },
+    { "id": "GC-RB-07", "proves": ["CT-1", "FR-12"], "description": "catalog: browse / search PUBLISHED courses", "input": { "method": "GET", "path": "/api/catalog/courses" }, "expected": { "LEARNER": 200, "INSTRUCTOR_OTHER": 200, "ADMIN": 200, "VISITOR": 401 } },
+    { "id": "GC-RB-08", "proves": ["CT-4", "FR-13", "AC-04.3"], "description": "catalog: view outline of PUBLISHED course (404 when not PUBLISHED)", "input": { "method": "GET", "path": "/api/catalog/courses/{course_id}", "course_state": "PUBLISHED" }, "expected": { "LEARNER": 200, "INSTRUCTOR_OTHER": 200, "ADMIN": 200, "LEARNER_when_UNPUBLISHED": 404 } },
+    { "id": "GC-RB-09", "proves": ["AC-10.1", "AC-10.3", "FR-18"], "description": "catalog: list all courses in any state", "input": { "method": "GET", "path": "/api/admin/courses" }, "expected": { "LEARNER": 403, "INSTRUCTOR_OWNER": 403, "ADMIN": 200 } },
+    { "id": "GC-RB-10", "proves": ["AC-04.4", "CL-4", "DR-04"], "description": "catalog: publish / unpublish / archive", "input": { "method": "POST", "path": "/api/admin/courses/{course_id}/publish", "course_state": "DRAFT" }, "expected": { "LEARNER": 403, "INSTRUCTOR_OWNER": 403, "ADMIN": 200 } },
+    { "id": "GC-RB-11", "proves": ["AC-01.1", "FR-01"], "description": "enrollment: register", "input": { "method": "POST", "path": "/api/auth/register" }, "expected": { "VISITOR": 201 } },
+    { "id": "GC-RB-12", "proves": ["AC-01.3", "AC-01.8"], "description": "enrollment: enrol in a course", "input": { "method": "POST", "path": "/api/courses/{course_id}/enrollments", "course_state": "PUBLISHED" }, "expected": { "VISITOR": 401, "LEARNER": 201, "INSTRUCTOR_OTHER": 403, "ADMIN": 403 } },
+    { "id": "GC-RB-13", "proves": ["FR-22"], "description": "enrollment: list own enrolments", "input": { "method": "GET", "path": "/api/me/enrollments" }, "expected": { "VISITOR": 401, "LEARNER": 200, "INSTRUCTOR_OTHER": 403, "ADMIN": 403 } },
+    { "id": "GC-RB-14", "proves": ["PR-11", "AC-07.11", "R-06"], "description": "progress: read lesson content (any course state for enrolled learners)", "input": { "method": "GET", "path": "/api/lessons/{lesson_id}", "course_state": "UNPUBLISHED" }, "expected": { "LEARNER_ENROLLED": 200, "LEARNER_NOT_ENROLLED": 403, "INSTRUCTOR_OWNER": 403, "ADMIN": 403 } },
+    { "id": "GC-RB-15", "proves": ["AC-07.7", "AC-07.8", "PR-2", "PR-3"], "description": "progress: mark lesson complete", "input": { "method": "POST", "path": "/api/lessons/{lesson_id}/completion", "course_state": "PUBLISHED" }, "expected": { "LEARNER_ENROLLED": 200, "LEARNER_NOT_ENROLLED": 403, "INSTRUCTOR_OWNER": 403, "ADMIN": 403, "LEARNER_ENROLLED_when_UNPUBLISHED": 409 } },
+    { "id": "GC-RB-16", "proves": ["FR-27"], "description": "progress: view own progress", "input": { "method": "GET", "path": "/api/enrollments/{enrollment_id}/progress" }, "expected": { "LEARNER_ENROLLED": 200 } },
+    { "id": "GC-RB-17", "proves": ["AC-07.9", "NFR-08", "DR-23"], "description": "progress: view another learner's progress", "input": { "method": "GET", "path": "/api/enrollments/{other_learner_enrollment_id}/progress" }, "expected": { "LEARNER_OTHER": 403, "LEARNER_NOT_ENROLLED": 403, "INSTRUCTOR_OWNER": 403, "ADMIN": 403 } },
+    { "id": "GC-RB-18", "proves": ["AC-05.1", "AC-05.8", "QZ-6"], "description": "quiz: create / replace module quiz", "input": { "method": "PUT", "path": "/api/modules/{module_id}/quiz", "course_state": "DRAFT" }, "expected": { "LEARNER_ENROLLED": 403, "LEARNER_NOT_ENROLLED": 403, "INSTRUCTOR_OWNER": 200, "INSTRUCTOR_OTHER": 403, "ADMIN": 403, "INSTRUCTOR_OWNER_when_PUBLISHED": 409 } },
+    { "id": "GC-RB-19", "proves": ["QZ-1"], "description": "quiz: view quiz with answers", "input": { "method": "GET", "path": "/api/modules/{module_id}/quiz" }, "expected": { "LEARNER_ENROLLED": 403, "LEARNER_NOT_ENROLLED": 403, "INSTRUCTOR_OWNER": 200, "INSTRUCTOR_OTHER": 403, "ADMIN": 403 } },
+    { "id": "GC-RB-20", "proves": ["AC-05.3", "AT-1", "AT-7"], "description": "quiz: view quiz without answers", "input": { "method": "GET", "path": "/api/quizzes/{quiz_id}" }, "expected": { "LEARNER_ENROLLED": 200, "LEARNER_NOT_ENROLLED": 403, "INSTRUCTOR_OTHER": 403, "ADMIN": 403, "body_contains_is_correct": false } },
+    { "id": "GC-RB-21", "proves": ["AC-06.6", "AT-1", "AT-2"], "description": "quiz: submit attempt", "input": { "method": "POST", "path": "/api/quizzes/{quiz_id}/attempts", "course_state": "PUBLISHED" }, "expected": { "LEARNER_ENROLLED": 201, "LEARNER_NOT_ENROLLED": 403, "INSTRUCTOR_OWNER": 403, "INSTRUCTOR_OTHER": 403, "ADMIN": 403, "LEARNER_ENROLLED_when_UNPUBLISHED": 409 } },
+    { "id": "GC-RB-22", "proves": ["FR-33"], "description": "quiz: view own attempts", "input": { "method": "GET", "path": "/api/quizzes/{quiz_id}/attempts" }, "expected": { "LEARNER_ENROLLED": 200, "LEARNER_NOT_ENROLLED": 403 } },
+    { "id": "GC-RB-23", "proves": ["AC-06.5", "AC-09.7", "FR-37", "NFR-08", "DR-25"], "description": "quiz: change any score or attempt — no such route exists", "input": { "methods": ["PUT", "PATCH", "DELETE"], "path_patterns": ["/api/quizzes/*/attempts*", "/api/attempts*", "*score*"] }, "expected": { "routes_found": 0 } },
+    { "id": "GC-RB-24", "proves": ["AC-09.1", "AC-09.4", "AC-09.5", "WB-3", "FR-35", "FR-36"], "description": "workbench: progress bands for a course", "input": { "method": "GET", "path": "/api/instructor/courses/{course_id}/progress-bands" }, "expected": { "LEARNER_ENROLLED": 403, "INSTRUCTOR_OWNER": 200, "INSTRUCTOR_OTHER": 403, "ADMIN": 200 } },
+    { "id": "GC-RB-25", "proves": ["AC-10.4", "AC-10.6", "FR-38"], "description": "workbench: platform analytics", "input": { "method": "GET", "path": "/api/admin/analytics" }, "expected": { "LEARNER": 403, "INSTRUCTOR_OWNER": 403, "ADMIN": 200 } },
+    { "id": "GC-RB-26", "proves": ["FR-03", "NFR-04"], "description": "expired or tampered token on any protected route", "input": { "method": "GET", "path": "/api/me/enrollments", "token": "expired" }, "expected": { "error_code": "UNAUTHENTICATED", "http_status": 401 } }
+  ],
+
+  "lesson_order": [
+    {
+      "id": "GC-LO-01", "proves": ["AC-07.3", "PR-4", "DR-12"],
+      "description": "Skip ahead within a module",
+      "input": { "course": [ { "module": 1, "lessons": ["L1", "L2", "L3", "L4"] } ], "completed": ["L1"], "complete": "L3" },
+      "expected": { "error_code": "LESSON_OUT_OF_ORDER", "http_status": 409, "completion_created": false }
+    },
+    {
+      "id": "GC-LO-02", "proves": ["AC-07.4", "PR-1", "PR-4", "DR-12"],
+      "description": "Skip across a module boundary",
+      "input": { "course": [ { "module": 1, "lessons": ["A", "B"] }, { "module": 2, "lessons": ["C"] } ], "completed": ["A"], "complete": "C" },
+      "expected": { "error_code": "LESSON_OUT_OF_ORDER", "http_status": 409, "completion_created": false }
+    },
+    {
+      "id": "GC-LO-03", "proves": ["AC-07.4", "PR-1", "PR-4"],
+      "description": "Crossing the module boundary in order succeeds",
+      "input": { "course": [ { "module": 1, "lessons": ["A", "B"] }, { "module": 2, "lessons": ["C"] } ], "completed": ["A", "B"], "complete": "C" },
+      "expected": { "http_status": 200, "progress_percent": 100, "next_lesson_id": null }
+    },
+    {
+      "id": "GC-LO-04", "proves": ["AC-07.5", "PR-5", "DR-13"],
+      "description": "Repeat completion is idempotent",
+      "input": { "course": [ { "module": 1, "lessons": ["L1", "L2", "L3", "L4"] } ], "completed": ["L1"], "complete": "L1" },
+      "expected": { "http_status": 200, "progress_percent": 25, "completion_rows_for_L1": 1, "snapshot_added": false }
+    },
+    {
+      "id": "GC-LO-05", "proves": ["AC-07.12", "PR-6"],
+      "description": "Two simultaneous completions of the next lesson",
+      "input": { "course": [ { "module": 1, "lessons": ["L1", "L2"] } ], "completed": [], "complete": "L1", "concurrent_requests": 2 },
+      "expected": { "responses": { "200": 2 }, "any_409_or_5xx": false, "completion_rows_for_L1": 1 }
+    },
+    {
+      "id": "GC-LO-06", "proves": ["PR-10"],
+      "description": "Locked flags and next lesson after first completion",
+      "input": { "course": [ { "module": 1, "lessons": ["L1", "L2", "L3"] } ], "completed": ["L1"] },
+      "expected": { "next_lesson_id": "L2", "locked": { "L1": false, "L2": false, "L3": true } }
+    }
+  ],
+
+  "completion_rate": [
+    { "id": "GC-CR-01", "proves": ["AC-10.4", "WB-6"], "description": "1 of 4 enrolled learners at 100%", "input": { "learners_at_100": 1, "enrollments": 4 }, "expected": { "completion_rate_percent": 25 } },
+    { "id": "GC-CR-02", "proves": ["AC-10.5", "WB-6", "NFR-01"], "description": "1 of 3 rounds down", "input": { "learners_at_100": 1, "enrollments": 3 }, "expected": { "completion_rate_percent": 33 } },
+    { "id": "GC-CR-03", "proves": ["WB-6"], "description": "No enrolments", "input": { "learners_at_100": 0, "enrollments": 0 }, "expected": { "completion_rate_percent": 0 } }
+  ]
+}
