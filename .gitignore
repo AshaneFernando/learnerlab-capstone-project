@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+.coverage
+.coverage.*
+htmlcov/
+# coverage.xml is committed on purpose (rubric evidence) — do not ignore it
+
+# Node / frontend
+node_modules/
+dist/
+.vite/
+# frontend/coverage/lcov.info is committed on purpose; ignore the rest of the coverage folder
+frontend/coverage/*
+!frontend/coverage/lcov.info
+
+# Playwright (snapshots in e2e/__snapshots__/ are committed)
+test-results/
+playwright-report/
+blob-report/
+
+# Local databases and environment
+*.db
+*.sqlite3
+.env
+.env.*
+!.env.example
+
+# Claude Code local settings
+.claude/settings.local.json
+.mcpb-cache/
+
+# Editors and OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
