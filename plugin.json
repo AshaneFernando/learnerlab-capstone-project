@@ -1,0 +1,29 @@
+{
+  "name": "learnlab-substrate",
+  "displayName": "LearnLab Substrate",
+  "version": "0.1.0",
+  "description": "LearnLab project substrate for the Claude Harness Engine: domain review agents, grading and progress skills, AC-coverage and sprint commands, append-only / content-lock / PII hooks, and Playwright MCP.",
+  "author": {
+    "name": "LearnLab AI-Native Engineer (BC-AINE-011)"
+  },
+  "license": "UNLICENSED",
+  "keywords": ["learnlab", "lms", "capstone", "claude-harness-engine"],
+  "dependencies": ["claude_harness_eng_v5"],
+  "agents": [
+    "./.claude/agents/quiz-grader-agent.md",
+    "./.claude/agents/course-state-validator-agent.md",
+    "./.claude/agents/archtest-author-agent.md"
+  ],
+  "skills": [
+    "./.claude/skills/quiz-grader",
+    "./.claude/skills/progress-aggregator",
+    "./.claude/skills/spec-to-test-generator"
+  ],
+  "commands": [
+    "./.claude/commands/ac-coverage.md",
+    "./.claude/commands/new-feature-spec.md",
+    "./.claude/commands/sprint-start.md"
+  ],
+  "hooks": "./.claude/hooks/learnlab-hooks.json",
+  "mcpServers": "./.mcp.json"
+}
